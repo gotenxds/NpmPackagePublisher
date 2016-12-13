@@ -1,0 +1,18 @@
+{
+  "name": "npm-package-publisher",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bluebird": "^3.4.6",
+    "commander": "^2.9.0",
+    "cross-spawn": "^5.0.1",
+    "tar.gz": "^1.0.5",
+    "winston": "^2.3.0"
+  },
+  "author": "David limkys",
+  "license": "ISC"
+}
