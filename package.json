@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "repository":"https://github.com/gotenxds/NpmPackagePublisher",
+  "home":"https://github.com/gotenxds/NpmPackagePublisher",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "npmPublish": "bin/npmPublish.js"
   },
   "dependencies": {
     "bluebird": "^3.4.6",
