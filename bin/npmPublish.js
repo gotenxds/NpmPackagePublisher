@@ -37,5 +37,3 @@ recursive(program.directory, ['*.log', '*.json'], function (err, files) {
 function parseName(file) {
   return file.substring(file.lastIndexOf('\\') + 1, file.lastIndexOf('.'));
 }
-
-
