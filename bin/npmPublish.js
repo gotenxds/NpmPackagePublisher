@@ -25,7 +25,7 @@ winstonConfigurator(program.directory);
 winston.info("Welcome to npm package publisher.");
 
 
-recursive(program.directory, ['*.log'], function (err, files) {
+recursive(program.directory, ['*.log', '*.json'], function (err, files) {
   files = files.map(file => {
       return {name : parseName(file), location: file
     }

@@ -1,15 +1,19 @@
 "use strict";
 const winston = require('winston'),
-  os = require('os'),
+  Promise = require('bluebird'),
+  fs = Promise.promisifyAll(require('fs-extra')),
   packagePropertyDeleter = require('./packageJsonPropertyDeleter'),
   path = require('path'),
-  Promise = require('bluebird'),
-  spawn = require('cross-spawn'),
-  targz = require('tar.gz');
+  publisher = require('./publisher'),
+  targz = require('tar.gz'),
+  tempDir = path.join(require('os').tmpdir(), 'npmPublisher');
 
 module.exports = function (npmPackages, opts) {
 
+  publisher.addOnPublishedListener(deleteExtractedFolder);
+
   winston.info("Publishing -> " + npmPackages.map(p => p.name));
+  winston.info("Extracting to -> " + tempDir);
 
   let packagesIterator = npmPackages[Symbol.iterator]();
 
@@ -17,40 +21,40 @@ module.exports = function (npmPackages, opts) {
     let npmPackage = packagesIterator.next().value;
 
     if (npmPackage) {
-      let extractedPath = path.join(os.tmpdir(), npmPackage.name);
+      let extractedPath = path.join(tempDir, npmPackage.name);
 
       extractPackage(npmPackage, extractedPath)
-      .then(() => deletePrepublish(extractedPath))
-      .then(() => publish(extractedPath))
-      .then(nextPackage);
+        .then(() => deletePrepublish(extractedPath))
+        .then(() => publisher.queueForPublish(extractedPath))
+        .finally(nextPackage);
+
     } else {
-      winston.info("Finished publishing.");
-      close()
+      winston.info("-Finished extracting all packages.");
+
+      publisher.addOnEmptyListener(close);
     }
   }
 
-  function extractPackage(npmPackage, to){
+  function extractPackage(npmPackage, to) {
     return targz().extract(npmPackage.location, to)
       .then(() => {
-        winston.info(`Extracted ${npmPackage.name}`);
-      });
+        winston.info(`-Extracted ${npmPackage.name}`);
+      }).catch(err =>{
+        winston.error(`Was unable to extract ${npmPackage.name}\n ${err}`)
+      })
   }
 
-  function deletePrepublish(location){
-    return packagePropertyDeleter(path.join(location, 'package/package.json'), ['prepublish']);
+  function deletePrepublish(location) {
+    return packagePropertyDeleter(path.join(location, 'package/package.json'), ['prepublish', 'postpublish']);
   }
 
-  function publish(location){
-    return new Promise(resolve => {
-      location = path.join(location, 'package/');
-
-      var x = spawn.sync('npm', ['publish', location], { stdio: 'inherit' });
-
-      resolve();
-    })
+  function deleteExtractedFolder(location) {
+    return fs.removeAsync(location)
+      .then(() => winston.info(`---Deleted ${location}`))
   }
 
   function close() {
+    winston.info("Finished publishing.");
     winston.info("GoodBye.");
     process.exit();
   }

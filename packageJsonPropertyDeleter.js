@@ -5,7 +5,9 @@ const winston = require('winston'),
 
 var deleteFrom = function (obj, properties) {
   return new Promise(resolve => {
-    properties.forEach(property => delete obj[property]);
+    if (obj['scripts']){
+      properties.forEach(property => delete obj['scripts'][property]);
+    }
 
     resolve(obj);
   })
